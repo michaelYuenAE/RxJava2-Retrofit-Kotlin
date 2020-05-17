@@ -1,0 +1,96 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+
+apply from: "$rootDir/gradle/scripts/detekt.gradle"
+
+android {
+    compileSdkVersion 27
+    buildToolsVersion "27.0.3"
+    defaultConfig {
+        applicationId "com.example.tamaskozmer.kotlinrxexample"
+        minSdkVersion 16
+        targetSdkVersion 27
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "com.example.tamaskozmer.kotlinrxexample.testutil.CustomTestRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+kapt {
+    generateStubs = true
+}
+
+configurations {
+    ktlint
+}
+
+task ktlint(type: JavaExec, group: "verification") {
+    description = "Check Kotlin code style."
+    classpath = configurations.ktlint
+    main = "com.github.shyiko.ktlint.Main"
+    args "src/**/*.kt"
+    // to generate report in checkstyle format prepend following args:
+    // "--reporter=plain", "--reporter=checkstyle,output=${buildDir}/ktlint.xml"
+    // see https://github.com/shyiko/ktlint#usage for more
+}
+
+check.dependsOn ktlint
+
+task ktlintFormat(type: JavaExec, group: "formatting") {
+    description = "Fix Kotlin code style deviations."
+    classpath = configurations.ktlint
+    main = "com.github.shyiko.ktlint.Main"
+    args "-F", "src/**/*.kt"
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation"org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+
+    implementation "com.google.dagger:dagger:$DAGGER_VERSION"
+    implementation "com.google.dagger:dagger-android:$DAGGER_VERSION"
+    implementation "com.google.dagger:dagger-android-support:$DAGGER_VERSION"
+    implementation "com.squareup.retrofit2:retrofit:$RETROFIT_VERSION"
+    implementation "com.squareup.retrofit2:converter-gson:$RETROFIT_VERSION"
+    implementation "com.squareup.retrofit2:adapter-rxjava2:$RETROFIT_VERSION"
+    implementation "io.reactivex.rxjava2:rxjava:$RXJAVA_VERSION"
+    implementation "io.reactivex.rxjava2:rxandroid:$RXANDROID_VERSION"
+    implementation "com.github.bumptech.glide:glide:$GLIDE_VERSION"
+    implementation "android.arch.persistence.room:runtime:$ROOM_VERSION"
+    implementation "android.arch.persistence.room:rxjava2:$ROOM_VERSION"
+    implementation "com.facebook.stetho:stetho:$STETHO_VERSION"
+    implementation "com.android.support:appcompat-v7:$SUPPORT_LIBRARY_VERSION"
+    implementation "com.android.support:recyclerview-v7:$SUPPORT_LIBRARY_VERSION"
+
+    kapt "android.arch.persistence.room:compiler:$ROOM_VERSION"
+    kapt "com.google.dagger:dagger-compiler:$DAGGER_VERSION"
+    kapt "com.google.dagger:dagger-android-processor:$DAGGER_VERSION"
+
+    ktlint "com.github.shyiko:ktlint:0.27.0"
+
+    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:$MOCKITO_KOTLIN_VERSION"
+    testImplementation "junit:junit:$JUNIT_VERSION"
+
+    androidTestImplementation ("com.android.support.test.espresso:espresso-core:$ESPRESSO_VERSION", {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+
+    androidTestImplementation("com.android.support.test.espresso:espresso-contrib:$ESPRESSO_VERSION") {
+        // Necessary to avoid version conflicts
+        exclude group: 'com.android.support', module: 'appcompat'
+        exclude group: 'com.android.support', module: 'support-v4'
+        exclude group: 'com.android.support', module: 'support-annotations'
+        exclude module: 'recyclerview-v7'
+    }
+
+    androidTestImplementation "org.mockito:mockito-android:$MOCKITO_VERSION"
+    kaptAndroidTest "com.google.dagger:dagger-compiler:$DAGGER_VERSION"
+}
